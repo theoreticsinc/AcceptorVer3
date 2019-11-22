@@ -64,20 +64,14 @@ public class MainStart {
     final GpioController gpio = GpioFactory.getInstance();
 
     // provision gpio pin #01 as an output pin and turn on
-    final GpioPinDigitalOutput led1 = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_21, "HDDLED", PinState.LOW);
-    final GpioPinDigitalOutput led2 = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_26, "POWERLED", PinState.LOW);
+    final GpioPinDigitalOutput led1 = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_26, "HDDLED", PinState.LOW);
+    final GpioPinDigitalOutput led2 = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_21, "POWERLED", PinState.LOW);
 
-//    final GpioPinDigitalInput pinDispenserCardOK = gpio.provisionDigitalInputPin(RaspiPin.GPIO_23, PinPullResistance.PULL_UP);
-//    final GpioPinDigitalInput pinDispenserLack = gpio.provisionDigitalInputPin(RaspiPin.GPIO_24, PinPullResistance.PULL_UP);
-//    final GpioPinDigitalInput pinDispenserEmpty = gpio.provisionDigitalInputPin(RaspiPin.GPIO_25, PinPullResistance.PULL_UP);
-//    final GpioPinDigitalInput btnPower = gpio.provisionDigitalInputPin(RaspiPin.GPIO_00, PinPullResistance.PULL_UP);
-//    final GpioPinDigitalInput btnReset = gpio.provisionDigitalInputPin(RaspiPin.GPIO_11, PinPullResistance.PULL_UP);
-//    final GpioPinDigitalInput btnDispense = gpio.provisionDigitalInputPin(RaspiPin.GPIO_29, PinPullResistance.PULL_UP);
     final GpioPinDigitalOutput relayBarrier = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_08, "BARRIER", PinState.HIGH);
     final GpioPinDigitalOutput relayLights = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_09, "LIGHTS", PinState.HIGH);
     final GpioPinDigitalOutput relayFan = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_30, "FAN", PinState.HIGH);
 
-    final GpioPinDigitalOutput transistorAcceptor = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_27, "DISPENSE", PinState.LOW);
+    final GpioPinDigitalOutput transistorAccept = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_27, "DISPENSE", PinState.LOW);
     final GpioPinDigitalOutput transistorReject = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_28, "REJECT", PinState.LOW);
 
     public void startProgram() {
@@ -168,7 +162,7 @@ public class MainStart {
         //Testing Remotely
 //        cards.add("ABC1234");
         while (true) {
-            //System.out.print("!");
+            //System.out.print("!");            
             strUID = "";
             text = scan.nextLine();
             if (null != text) {
@@ -181,26 +175,6 @@ public class MainStart {
                     System.out.println("UID: " + cardUID.substring(6, 8) + cardUID.substring(4, 6) + cardUID.substring(2, 4) + cardUID.substring(0, 2));
                 } catch (Exception ex) {
                     System.err.println("Card Conversion: " + ex);
-                }
-                if (text.compareTo("X") == 0) {
-
-                    transistorReject.setState(PinState.LOW);
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException ex) {
-                        java.util.logging.Logger.getLogger(MainStart.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                    transistorReject.setState(PinState.HIGH);
-
-                }
-                else {
-                    transistorAcceptor.setState(PinState.LOW);
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException ex) {
-                        java.util.logging.Logger.getLogger(MainStart.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                    transistorAcceptor.setState(PinState.HIGH);
                 }
                 //System.out.println("" + stats);
 //                strUID = Convert.bytesToHex(tagid);
@@ -228,11 +202,29 @@ public class MainStart {
 
                         if (isValid) {
                             System.out.print("Sent Success");
+
+                            transistorAccept.setState(PinState.LOW);
+                            try {
+                                Thread.sleep(1000);
+                            } catch (InterruptedException ex) {
+                                java.util.logging.Logger.getLogger(MainStart.class.getName()).log(Level.SEVERE, null, ex);
+                            }
+                            transistorAccept.setState(PinState.HIGH);
                             try {
                                 relayBarrier.setState(PinState.LOW);
                                 Thread.sleep(1000);
                                 relayBarrier.setState(PinState.HIGH);
                                 dbh.deleteValidCard(cardFromReader);
+                                try {
+                                    if (thankyouClip.isActive() == false) {
+                                        //haltButton = false;
+                                        thankyouClip.setFramePosition(0);
+                                        thankyouClip.start();
+                                    }
+
+                                } catch (Exception ex) {
+                                    ex.printStackTrace();
+                                }
                                 Thread.sleep(2000);
 
                             } catch (InterruptedException ex) {
@@ -240,6 +232,17 @@ public class MainStart {
                             }
                         } else {
                             System.out.print("Sent InValid");
+                            if (text.compareTo("X") == 0) {
+                                transistorReject.setState(PinState.LOW);
+                                try {
+                                    Thread.sleep(1000);
+                                } catch (InterruptedException ex) {
+                                    java.util.logging.Logger.getLogger(MainStart.class.getName()).log(Level.SEVERE, null, ex);
+                                }
+                                transistorReject.setState(PinState.HIGH);
+
+                            }
+
                             try {
                                 if (insufficientclip.isActive() == false) {
                                     //haltButton = false;
@@ -448,6 +451,9 @@ public class MainStart {
         relayBarrier.high();
         relayLights.high();
 
+        transistorReject.setShutdownOptions(true);
+        transistorAccept.setShutdownOptions(true);
+
 //        relayBarrier.setShutdownOptions(true, PinState.LOW);
 //        relayFan.setShutdownOptions(true, PinState.LOW);
 //        relayLights.setShutdownOptions(true, PinState.LOW);
@@ -465,8 +471,7 @@ public class MainStart {
         led1.high(); //Show POWER is ON led1.high
         led2.blink(100, 2000);
 
-        transistorReject.pulse(500, true);
-
+//        transistorReject.pulse(500, true);
     }
 
     public static String bytesToHex(byte[] bytes) {
