@@ -35,7 +35,7 @@ public class MainStart {
 
     String cardFromReader = "";
 
-    ArrayList<String> cards;
+    //ArrayList<String> cards;
     private static Logger log = LogManager.getLogger(MainStart.class.getName());
     DateConversionHandler dch = new DateConversionHandler();
     private Thread ThrNetworkClock;
@@ -147,7 +147,7 @@ public class MainStart {
             notifyError(ex);
         }
 
-        this.cards = new ArrayList<String>();
+//        this.cards = new ArrayList<String>();
 
         DataBaseHandler dbh = new DataBaseHandler(CONSTANTS.serverIP);
 
@@ -178,116 +178,116 @@ public class MainStart {
                 }
                 //System.out.println("" + stats);
 //                strUID = Convert.bytesToHex(tagid);
-                if (prevUID.compareToIgnoreCase(strUID) != 0) {
-                    //Uncomment Below to disable Read same Card
+                try {
+                    if (prevUID.compareToIgnoreCase(strUID) != 0) {
+                        //Uncomment Below to disable Read same Card
 //                    prevUID = strUID;
-                    System.out.println("Card Read UID:" + strUID.substring(0, 8));
-                    cardFromReader = strUID.substring(0, 8).toUpperCase();
+                        System.out.println("Card Read UID:" + strUID.substring(0, 8));
+                        cardFromReader = strUID.substring(0, 8).toUpperCase();
 //
-                    if (cardFromReader.compareToIgnoreCase("") != 0) {
-                        cards.add(cardFromReader);
-                        boolean isValid = false;
-                        boolean isUpdated = false;
-                        Date serverTime = dbh.getServerDateTime();
-                        System.out.println("Time On Card*" + cardFromReader + "* :: " + serverTime);
+                        if (cardFromReader.compareToIgnoreCase("") != 0) {
+//                            cards.add(cardFromReader);
+                            boolean isValid = false;
+                            boolean isUpdated = false;
+                            Date serverTime = dbh.getServerDateTime();
+                            System.out.println("Time On Card*" + cardFromReader + "* :: " + serverTime);
 //                            boolean alreadyExists = dbh.findCGHCard(cardFromReader);
-                        try {
-                            //isValid = dbh.writeManualEntrance(exitID, cardFromReader, "R", d2, timeStampIN, startCapture);
-                            isValid = dbh.isExitValid(serverTime, cardFromReader);
-
-                            //isValid = true;
-                        } catch (Exception ex) {
-                            ex.printStackTrace();
-                        }
-
-                        if (isValid) {
-                            System.out.print("Sent Success");
-
-                            transistorAccept.setState(PinState.LOW);
                             try {
-                                Thread.sleep(1000);
-                            } catch (InterruptedException ex) {
-                                java.util.logging.Logger.getLogger(MainStart.class.getName()).log(Level.SEVERE, null, ex);
-                            }
-                            transistorAccept.setState(PinState.HIGH);
-                            try {
-                                relayBarrier.setState(PinState.LOW);
-                                Thread.sleep(1000);
-                                relayBarrier.setState(PinState.HIGH);
-                                dbh.deleteValidCard(cardFromReader);
-                                try {
-                                    if (thankyouClip.isActive() == false) {
-                                        //haltButton = false;
-                                        thankyouClip.setFramePosition(0);
-                                        thankyouClip.start();
-                                    }
+                                //isValid = dbh.writeManualEntrance(exitID, cardFromReader, "R", d2, timeStampIN, startCapture);
+                                isValid = dbh.isExitValid(serverTime, cardFromReader);
 
-                                } catch (Exception ex) {
-                                    ex.printStackTrace();
-                                }
-                                Thread.sleep(2000);
-
-                            } catch (InterruptedException ex) {
-                                java.util.logging.Logger.getLogger(MainStart.class.getName()).log(Level.SEVERE, null, ex);
+                                //isValid = true;
+                            } catch (Exception ex) {
+                                ex.printStackTrace();
                             }
-                        } else {
-                            System.out.print("Sent InValid");
-                            if (text.compareTo("X") == 0) {
-                                transistorReject.setState(PinState.LOW);
+
+                            if (isValid) {
+                                System.out.print("Sent Success");
+
+                                transistorAccept.setState(PinState.HIGH);
                                 try {
                                     Thread.sleep(1000);
                                 } catch (InterruptedException ex) {
                                     java.util.logging.Logger.getLogger(MainStart.class.getName()).log(Level.SEVERE, null, ex);
                                 }
-                                transistorReject.setState(PinState.HIGH);
+                                transistorAccept.setState(PinState.LOW);
+                                try {
+                                    relayBarrier.setState(PinState.LOW);
+                                    Thread.sleep(1000);
+                                    relayBarrier.setState(PinState.HIGH);
+                                    dbh.deleteValidCard(cardFromReader);
+                                    try {
+                                        if (thankyouClip.isActive() == false) {
+                                            //haltButton = false;
+                                            thankyouClip.setFramePosition(0);
+                                            thankyouClip.start();
+                                        }
 
-                            }
+                                    } catch (Exception ex) {
+                                        ex.printStackTrace();
+                                    }
+                                    Thread.sleep(2000);
 
-                            try {
-                                if (insufficientclip.isActive() == false) {
-                                    //haltButton = false;
-                                    insufficientclip.setFramePosition(0);
-                                    insufficientclip.start();
+                                } catch (InterruptedException ex) {
+                                    java.util.logging.Logger.getLogger(MainStart.class.getName()).log(Level.SEVERE, null, ex);
                                 }
+                            } else {
+                                System.out.print("Sent InValid");
+                                transistorReject.setState(PinState.HIGH);
+                                try {
+                                    Thread.sleep(1000);
+                                } catch (InterruptedException ex) {
+                                    java.util.logging.Logger.getLogger(MainStart.class.getName()).log(Level.SEVERE, null, ex);
+                                }
+                                transistorReject.setState(PinState.LOW);
 
-                            } catch (Exception ex) {
-                                ex.printStackTrace();
+                                try {
+                                    if (insufficientclip.isActive() == false) {
+                                        //haltButton = false;
+                                        insufficientclip.setFramePosition(0);
+                                        insufficientclip.start();
+                                    }
+
+                                } catch (Exception ex) {
+                                    ex.printStackTrace();
+                                }
                             }
+
                         }
 
-                    }
-
-                    //led1.pulse(1250, true);
+                        //led1.pulse(1250, true);
 //                    System.out.println("LED Open!");
-                    //led2.pulse(1250, true);
-                    // turn on gpio pin1 #01 for 1 second and then off
-                    //System.out.println("--> GPIO state should be: ON for only 3 second");
-                    // set second argument to 'true' use a blocking call
+                        //led2.pulse(1250, true);
+                        // turn on gpio pin1 #01 for 1 second and then off
+                        //System.out.println("--> GPIO state should be: ON for only 3 second");
+                        // set second argument to 'true' use a blocking call
 //                    c.showWelcome(700, false);
+                    }
+                } catch (Exception ex) {
+                    ex.printStackTrace();
                 }
-            }
 //            strUID = null;
 //
-            Date now = new Date();
+                Date now = new Date();
 //            transistorDispense.pulse(500, true);
 //        transistorReject.pulse(500, true);
 //        System.out.println("Test Dispense");
-            //System.out.println("Hour :  " + now.getHours());
-            if (now.getHours() >= 18) {
-                //relayLights.low();
-            }
-            try {
-                if (SystemInfo.getCpuTemperature() >= 65) {
-                    System.out.println("CPU Temperature   :  " + SystemInfo.getCpuTemperature());
+                //System.out.println("Hour :  " + now.getHours());
+                if (now.getHours() >= 18) {
+                    //relayLights.low();
+                }
+                try {
+                    if (SystemInfo.getCpuTemperature() >= 65) {
+                        System.out.println("CPU Temperature   :  " + SystemInfo.getCpuTemperature());
 //                    relayFan.low();
 //                    relayBarrier.low();
 //                    transistorDispense.pulse(500, true);
-                } else {
+                    } else {
 //                    relayFan.high();
 //                    relayBarrier.high();
+                    }
+                } catch (Exception ex) {
                 }
-            } catch (Exception ex) {
-            }
 
 //            if (null != strUID) {
 //                if (strUID.compareTo("") == 0) {
@@ -296,21 +296,23 @@ public class MainStart {
 //            } else {
 //                transistorDispense.pulse(500, true);
 //            }
-            if (led1.isLow()) {
-                led1.high();
-            }
-            if (led2.isLow()) {
-                led2.high();
-            }
+                if (led1.isLow()) {
+                    led1.high();
+                }
+                if (led2.isLow()) {
+                    led2.high();
+                }
 
-            try {
+                try {
 //                Thread.sleep(500);
 //                rc522 = null;
 //                Thread.sleep(3200);
 //                Thread.yield();
-            } catch (Exception ex) {
-                System.out.println(ex.getMessage());
+                } catch (Exception ex) {
+                    System.out.println(ex.getMessage());
+                }
             }
+
         }
 
     }
@@ -450,6 +452,9 @@ public class MainStart {
         relayFan.high();
         relayBarrier.high();
         relayLights.high();
+
+        transistorReject.setShutdownOptions(true, PinState.LOW);
+        transistorAccept.setShutdownOptions(true, PinState.LOW);
 
         transistorReject.setShutdownOptions(true);
         transistorAccept.setShutdownOptions(true);
