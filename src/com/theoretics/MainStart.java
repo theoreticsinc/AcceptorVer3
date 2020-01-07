@@ -79,14 +79,14 @@ public class MainStart {
 //        System.out.println(entranceID + " Tap Card Listener " + version);
 
         try {
-            welcomeAudioIn = AudioSystem.getAudioInputStream(MainStart.class.getResource("/sounds/addas.wav"));
+            welcomeAudioIn = AudioSystem.getAudioInputStream(MainStart.class.getResource("/sounds/welcome2wcmc.wav"));
             welcomeClip = AudioSystem.getClip();
             welcomeClip.open(welcomeAudioIn);
         } catch (Exception ex) {
             notifyError(ex);
         }
         try {
-            pleasewaitAudioIn = AudioSystem.getAudioInputStream(MainStart.class.getResource("/sounds/plswait.wav"));
+            pleasewaitAudioIn = AudioSystem.getAudioInputStream(MainStart.class.getResource("/sounds/plswaitGB.wav"));
             pleaseWaitClip = AudioSystem.getClip();
             pleaseWaitClip.open(pleasewaitAudioIn);
         } catch (Exception ex) {
@@ -130,7 +130,7 @@ public class MainStart {
         }
 
         try {
-            insufficientaudioIn = AudioSystem.getAudioInputStream(MainStart.class.getResource("/sounds/Insufficient Payment.wav"));
+            insufficientaudioIn = AudioSystem.getAudioInputStream(MainStart.class.getResource("/sounds/pleasepay.wav"));
             insufficientclip = AudioSystem.getClip();
             insufficientclip.open(insufficientaudioIn);
         } catch (Exception ex) {
@@ -148,7 +148,6 @@ public class MainStart {
         }
 
 //        this.cards = new ArrayList<String>();
-
         DataBaseHandler dbh = new DataBaseHandler(CONSTANTS.serverIP);
 
         Scanner scan = new Scanner(System.in);
@@ -180,6 +179,16 @@ public class MainStart {
 //                strUID = Convert.bytesToHex(tagid);
                 try {
                     if (prevUID.compareToIgnoreCase(strUID) != 0) {
+                        try {
+                            if (pleaseWaitClip.isActive() == false) {
+                                //haltButton = false;
+                                pleaseWaitClip.setFramePosition(0);
+                                pleaseWaitClip.start();
+                            }
+
+                        } catch (Exception ex) {
+                            ex.printStackTrace();
+                        }
                         //Uncomment Below to disable Read same Card
 //                    prevUID = strUID;
                         System.out.println("Card Read UID:" + strUID.substring(0, 8));
