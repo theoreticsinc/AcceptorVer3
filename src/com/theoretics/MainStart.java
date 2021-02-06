@@ -74,14 +74,15 @@ public class MainStart {
     final GpioPinDigitalInput btnPower = gpio.provisionDigitalInputPin(RaspiPin.GPIO_26, PinPullResistance.PULL_UP);
     final GpioPinDigitalInput btnReset = gpio.provisionDigitalInputPin(RaspiPin.GPIO_27, PinPullResistance.PULL_UP);
     
-    final GpioPinDigitalInput red = gpio.provisionDigitalInputPin(RaspiPin.GPIO_06, PinPullResistance.PULL_UP);
-    final GpioPinDigitalInput orange = gpio.provisionDigitalInputPin(RaspiPin.GPIO_10, PinPullResistance.PULL_UP);
-    final GpioPinDigitalInput brown = gpio.provisionDigitalInputPin(RaspiPin.GPIO_13, PinPullResistance.PULL_UP);
-    final GpioPinDigitalInput yellow = gpio.provisionDigitalInputPin(RaspiPin.GPIO_14, PinPullResistance.PULL_UP);
+    final GpioPinDigitalInput getCard = gpio.provisionDigitalInputPin(RaspiPin.GPIO_22, PinPullResistance.PULL_DOWN);
+    final GpioPinDigitalInput rejected = gpio.provisionDigitalInputPin(RaspiPin.GPIO_23, PinPullResistance.PULL_DOWN);
+    final GpioPinDigitalInput received = gpio.provisionDigitalInputPin(RaspiPin.GPIO_24, PinPullResistance.PULL_DOWN);
+    final GpioPinDigitalInput receivedDN = gpio.provisionDigitalInputPin(RaspiPin.GPIO_25, PinPullResistance.PULL_DOWN);
+    
     final GpioPinDigitalInput carDetected = gpio.provisionDigitalInputPin(RaspiPin.GPIO_12, PinPullResistance.PULL_UP);
     
-    final GpioPinDigitalOutput transistorAccept = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_28, "DISPENSE", PinState.LOW);
-    final GpioPinDigitalOutput transistorReject = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_29, "REJECT", PinState.LOW);
+    final GpioPinDigitalOutput transistorAccept = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_29, "DISPENSE", PinState.LOW);
+    final GpioPinDigitalOutput transistorReject = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_28, "REJECT", PinState.LOW);
 
     public void startProgram() {
         System.out.println(entranceID + " Tap Card Listener " + version);
@@ -164,12 +165,22 @@ public class MainStart {
         String text = null;
         String cardUID = null;
         System.out.println("Reader Ready!");
+        
+        transistorAccept.high();
+//        transistorReject.high();
+        Gpio.delay(1000);
+        transistorAccept.low();
+//        transistorReject.low();
+        
+//        transistorReject.pulse(300, true);
+        System.out.println("Transistors Tested!");
 //        transistorDispense.pulse(3000, true);
 //        Gpio.delay(3000);
 //        transistorReject.pulse(3000, true);
         //Testing Remotely
 //        cards.add("ABC1234");
-        while (true) {
+/*
+while (true) {
             System.out.print("!");                                            
             strUID = "";
             text = scan.nextLine();
@@ -346,7 +357,7 @@ public class MainStart {
             }
 
         }
-
+*/
     }
 
     private void notifyError(Exception ex) {
@@ -491,14 +502,14 @@ public class MainStart {
         transistorReject.setShutdownOptions(true);
         transistorAccept.setShutdownOptions(true);
         
-        red.setMode(PinMode.DIGITAL_INPUT);
-        red.setPullResistance(PinPullResistance.PULL_UP);
-        orange.setMode(PinMode.DIGITAL_INPUT);
-        orange.setPullResistance(PinPullResistance.PULL_UP);
-        brown.setMode(PinMode.DIGITAL_INPUT);
-        brown.setPullResistance(PinPullResistance.PULL_UP);
-        yellow.setMode(PinMode.DIGITAL_INPUT);
-        yellow.setPullResistance(PinPullResistance.PULL_UP);
+        rejected.setMode(PinMode.DIGITAL_INPUT);
+        rejected.setPullResistance(PinPullResistance.PULL_UP);
+        getCard.setMode(PinMode.DIGITAL_INPUT);
+        getCard.setPullResistance(PinPullResistance.PULL_UP);
+        received.setMode(PinMode.DIGITAL_INPUT);
+        received.setPullResistance(PinPullResistance.PULL_UP);
+        receivedDN.setMode(PinMode.DIGITAL_INPUT);
+        receivedDN.setPullResistance(PinPullResistance.PULL_UP);
         
         carDetected.setMode(PinMode.DIGITAL_INPUT);
         carDetected.setPullResistance(PinPullResistance.PULL_UP);
@@ -518,17 +529,18 @@ public class MainStart {
         btnPower.setShutdownOptions(true);
         btnReset.setShutdownOptions(true);
         
-        red.setShutdownOptions(true);
-        orange.setShutdownOptions(true);
-        brown.setShutdownOptions(true);
-        yellow.setShutdownOptions(true);
+        rejected.setShutdownOptions(true);
+        getCard.setShutdownOptions(true);
+        received.setShutdownOptions(true);
+        receivedDN.setShutdownOptions(true);
         carDetected.setShutdownOptions(true);
         btnReset.setShutdownOptions(true);
         led1.high(); //Show POWER is ON led1.high
         led2.blink(300, 3000);
 
-//        transistorReject.pulse(300, true);
-
+        transistorAccept.low();
+        transistorReject.low();        
+                
 
         btnPower.addListener(new GpioPinListenerDigital() {
             @Override
@@ -570,40 +582,46 @@ public class MainStart {
         });
         
         
-        red.addListener(new GpioPinListenerDigital() {
+        getCard.addListener(new GpioPinListenerDigital() {
             @Override
             public void handleGpioPinDigitalStateChangeEvent(GpioPinDigitalStateChangeEvent event) {
                 // display pin state on console
                 if (event.getState() == PinState.LOW) {
-                    System.out.println("RED");
+                    System.out.println("ACCEPTED");
                 }
                 System.out.println(" --> GPIO PIN STATE CHANGE: " + event.getPin() + " = " + event.getState());                
             }
 
         });
 
-        orange.addListener(new GpioPinListenerDigital() {
+        rejected.addListener(new GpioPinListenerDigital() {
             @Override
             public void handleGpioPinDigitalStateChangeEvent(GpioPinDigitalStateChangeEvent event) {
                 // display pin state on console
                 if (event.getState() == PinState.LOW) {
-                    System.out.println("ORANGE is REJECTED");
-                    Gpio.delay(300);
-                    transistorReject.setState(PinState.LOW);  
+                    System.out.println("CARD is REJECTED");
+                    //LOW = REJECTED AND ON THE MOUTH
+                    //HIGH = REJECTED AND TAKEN BY PARKER
                 }
                 System.out.println(" --> GPIO PIN STATE CHANGE: " + event.getPin() + " = " + event.getState());                
             }
 
         });
 
-        brown.addListener(new GpioPinListenerDigital() {
+        received.addListener(new GpioPinListenerDigital() {
             @Override
             public void handleGpioPinDigitalStateChangeEvent(GpioPinDigitalStateChangeEvent event) {
                 // display pin state on console
                 if (event.getState() == PinState.LOW) {
-                    System.out.println("BROWN is GET CARD");
+                    System.out.println("CARD is RECEIVED");
+                    //LOW = RECEIVED AND READY FOR CARD SCANNER
+                    //HIGH = RECEIVED AND LEFT THE SCANNING AREA
                     Gpio.delay(300);
-                    transistorReject.setState(PinState.HIGH);   
+                    transistorReject.low();
+                    Gpio.delay(300);
+                    transistorReject.high();
+                    Gpio.delay(300);
+                    transistorReject.low();
                 }
                 System.out.println(" --> GPIO PIN STATE CHANGE: " + event.getPin() + " = " + event.getState());                
             }
@@ -611,14 +629,12 @@ public class MainStart {
         });
 
 
-        yellow.addListener(new GpioPinListenerDigital() {
+        receivedDN.addListener(new GpioPinListenerDigital() {
             @Override
             public void handleGpioPinDigitalStateChangeEvent(GpioPinDigitalStateChangeEvent event) {
                 // display pin state on console
                 if (event.getState() == PinState.LOW) {
-                    System.out.println("YELLOW");
-                    Gpio.delay(300);
-                    transistorReject.setState(PinState.HIGH);                                      
+                    System.out.println("CARD IS RECEIVED DOWN");                               
                 }
                 System.out.println(" --> GPIO PIN STATE CHANGE: " + event.getPin() + " = " + event.getState());                
             }
