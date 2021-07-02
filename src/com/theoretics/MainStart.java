@@ -65,7 +65,7 @@ public class MainStart {
 
     // provision gpio pin #01 as an output pin and turn on
     final GpioPinDigitalOutput led1 = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_11, "HDDLED", PinState.LOW);
-    final GpioPinDigitalOutput led2 = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_21, "POWERLED", PinState.LOW);
+    final GpioPinDigitalOutput led2 = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_12, "POWERLED", PinState.LOW);
 
     final GpioPinDigitalOutput relayBarrier = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_08, "BARRIER", PinState.HIGH);
     final GpioPinDigitalOutput relayLights = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_09, "LIGHTS", PinState.HIGH);
@@ -79,10 +79,10 @@ public class MainStart {
     final GpioPinDigitalInput received = gpio.provisionDigitalInputPin(RaspiPin.GPIO_24, PinPullResistance.PULL_DOWN);
     final GpioPinDigitalInput receivedDN = gpio.provisionDigitalInputPin(RaspiPin.GPIO_25, PinPullResistance.PULL_DOWN);
     
-    final GpioPinDigitalInput carDetected = gpio.provisionDigitalInputPin(RaspiPin.GPIO_12, PinPullResistance.PULL_UP);
+    final GpioPinDigitalInput carDetected = gpio.provisionDigitalInputPin(RaspiPin.GPIO_28, PinPullResistance.PULL_UP);
     
-    final GpioPinDigitalOutput transistorAccept = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_29, "DISPENSE", PinState.LOW);
-    final GpioPinDigitalOutput transistorReject = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_28, "REJECT", PinState.LOW);
+    final GpioPinDigitalOutput transistorAccept = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_00, "ACCEPT", PinState.LOW);
+    final GpioPinDigitalOutput transistorReject = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_02, "REJECT", PinState.LOW);
 
     public void startProgram() {
         System.out.println(entranceID + " Tap Card Listener " + version);
@@ -179,7 +179,7 @@ public class MainStart {
 //        transistorReject.pulse(3000, true);
         //Testing Remotely
 //        cards.add("ABC1234");
-/*
+
 while (true) {
             System.out.print("!");                                            
             strUID = "";
@@ -357,7 +357,7 @@ while (true) {
             }
 
         }
-*/
+
     }
 
     private void notifyError(Exception ex) {
@@ -587,8 +587,8 @@ while (true) {
             public void handleGpioPinDigitalStateChangeEvent(GpioPinDigitalStateChangeEvent event) {
                 // display pin state on console
                 if (event.getState() == PinState.LOW) {
-                    System.out.println("ACCEPTED");
-                }
+                    System.out.println("IS ON THE MOUTH");
+                }                
                 System.out.println(" --> GPIO PIN STATE CHANGE: " + event.getPin() + " = " + event.getState());                
             }
 
@@ -602,8 +602,10 @@ while (true) {
                     System.out.println("CARD is REJECTED");
                     //LOW = REJECTED AND ON THE MOUTH
                     //HIGH = REJECTED AND TAKEN BY PARKER
+                } else if (event.getState() == PinState.HIGH) {
+                    System.out.println("REJECTED AND PRESENTED TO PARKER");
                 }
-                System.out.println(" --> GPIO PIN STATE CHANGE: " + event.getPin() + " = " + event.getState());                
+                //System.out.println(" --> GPIO PIN STATE CHANGE: " + event.getPin() + " = " + event.getState());                
             }
 
         });
@@ -617,13 +619,16 @@ while (true) {
                     //LOW = RECEIVED AND READY FOR CARD SCANNER
                     //HIGH = RECEIVED AND LEFT THE SCANNING AREA
                     Gpio.delay(300);
-                    transistorReject.low();
+                    transistorAccept.low();
                     Gpio.delay(300);
-                    transistorReject.high();
+                    transistorAccept.high();
                     Gpio.delay(300);
-                    transistorReject.low();
+                    transistorAccept.low();
+                } else if (event.getState() == PinState.HIGH) {
+                    System.out.println("RECEIVED AND LEFT THE SCANNING AREA");
                 }
-                System.out.println(" --> GPIO PIN STATE CHANGE: " + event.getPin() + " = " + event.getState());                
+                
+                //System.out.println(" --> GPIO PIN STATE CHANGE: " + event.getPin() + " = " + event.getState());                
             }
 
         });
