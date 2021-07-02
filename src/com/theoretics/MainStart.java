@@ -74,7 +74,7 @@ public class MainStart {
     final GpioPinDigitalInput btnPower = gpio.provisionDigitalInputPin(RaspiPin.GPIO_26, PinPullResistance.PULL_UP);
     final GpioPinDigitalInput btnReset = gpio.provisionDigitalInputPin(RaspiPin.GPIO_27, PinPullResistance.PULL_UP);
     
-    final GpioPinDigitalInput getCard = gpio.provisionDigitalInputPin(RaspiPin.GPIO_22, PinPullResistance.PULL_DOWN);
+    final GpioPinDigitalInput busy = gpio.provisionDigitalInputPin(RaspiPin.GPIO_22, PinPullResistance.PULL_DOWN);
     final GpioPinDigitalInput rejected = gpio.provisionDigitalInputPin(RaspiPin.GPIO_23, PinPullResistance.PULL_DOWN);
     final GpioPinDigitalInput received = gpio.provisionDigitalInputPin(RaspiPin.GPIO_24, PinPullResistance.PULL_DOWN);
     final GpioPinDigitalInput receivedDN = gpio.provisionDigitalInputPin(RaspiPin.GPIO_25, PinPullResistance.PULL_DOWN);
@@ -504,8 +504,8 @@ while (true) {
         
         rejected.setMode(PinMode.DIGITAL_INPUT);
         rejected.setPullResistance(PinPullResistance.PULL_UP);
-        getCard.setMode(PinMode.DIGITAL_INPUT);
-        getCard.setPullResistance(PinPullResistance.PULL_UP);
+        busy.setMode(PinMode.DIGITAL_INPUT);
+        busy.setPullResistance(PinPullResistance.PULL_UP);
         received.setMode(PinMode.DIGITAL_INPUT);
         received.setPullResistance(PinPullResistance.PULL_UP);
         receivedDN.setMode(PinMode.DIGITAL_INPUT);
@@ -530,7 +530,7 @@ while (true) {
         btnReset.setShutdownOptions(true);
         
         rejected.setShutdownOptions(true);
-        getCard.setShutdownOptions(true);
+        busy.setShutdownOptions(true);
         received.setShutdownOptions(true);
         receivedDN.setShutdownOptions(true);
         carDetected.setShutdownOptions(true);
@@ -582,7 +582,7 @@ while (true) {
         });
         
         
-        getCard.addListener(new GpioPinListenerDigital() {
+        busy.addListener(new GpioPinListenerDigital() {
             @Override
             public void handleGpioPinDigitalStateChangeEvent(GpioPinDigitalStateChangeEvent event) {
                 // display pin state on console
